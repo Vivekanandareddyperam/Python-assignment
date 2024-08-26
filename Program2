@@ -1,0 +1,58 @@
+import requests
+
+# Define the API key and endpoint
+API_KEY = 'your_api_key_here'
+BASE_URL = 'http://api.openweathermap.org/data/2.5/weather'
+
+def get_weather_data(location):
+    # Check if the location is coordinates or city name
+    if ',' in location:
+        # Coordinates are separated by a comma
+        lat, lon = location.split(',')
+        params = {
+            'lat': lat.strip(),
+            'lon': lon.strip(),
+            'appid': API_KEY,
+            'units': 'metric'  # for Celsius; use 'imperial' for Fahrenheit
+        }
+    else:
+        # Assume location is a city name
+        params = {
+            'q': location,
+            'appid': API_KEY,
+            'units': 'metric'  # for Celsius; use 'imperial' for Fahrenheit
+        }
+    
+    response = requests.get(BASE_URL, params=params)
+    
+    if response.status_code == 200:
+        data = response.json()
+        if data['cod'] == 200:
+            weather = {
+                'temperature': data['main']['temp'],
+                'conditions': data['weather'][0]['description'],
+                'humidity': data['main']['humidity'],
+                'wind_speed': data['wind']['speed']
+            }
+            return weather
+        else:
+            return {'error': data.get('message', 'Error fetching weather data')}
+    else:
+        return {'error': 'Failed to connect to the weather service'}
+
+def display_weather(weather):
+    if 'error' in weather:
+        print(f"Error: {weather['error']}")
+    else:
+        print(f"Temperature: {weather['temperature']}°C")
+        print(f"Conditions: {weather['conditions']}")
+        print(f"Humidity: {weather['humidity']}%")
+        print(f"Wind Speed: {weather['wind_speed']} m/s")
+
+def main():
+    location = input("Enter city name or coordinates (lat,lon): ")
+    weather = get_weather_data(location)
+    display_weather(weather)
+
+if __name__ == '__main__':
+    main()
